@@ -1,26 +1,7 @@
-export const getYoutubeChannelDataDefaultResponse = {
-  kind: "youtube#channelListResponse",
-  etag: "HahajDFWeEWloCDbYPN7Q2CUy2s",
-  pageInfo: {
-    totalResults: 1,
-    resultsPerPage: 5,
-  },
-  items: [
-    {
-      kind: "youtube#channel",
-      etag: "7VXozDeztPxlh-aW2fYVN7bcPxQ",
-      id: "UCf9T51_FmMlfhiGpoes0yFA",
-      statistics: {
-        viewCount: "39669",
-        subscriberCount: "1010",
-        hiddenSubscriberCount: false,
-        videoCount: "114",
-      },
-    },
-  ],
-};
+import React from 'react';
 
-export const getYoutubeVideosDefaultResponse = {
+// Using the YouTube API response data from your file
+const getYoutubeVideosDefaultResponse = {
   kind: "youtube#searchListResponse",
   etag: "Rw3ulmyKVKn2fcQJ6cUixEmCuSk",
   nextPageToken: "CAUQAA",
@@ -208,3 +189,125 @@ export const getYoutubeVideosDefaultResponse = {
     },
   ],
 };
+
+const getYoutubeChannelDataDefaultResponse = {
+  kind: "youtube#channelListResponse",
+  etag: "HahajDFWeEWloCDbYPN7Q2CUy2s",
+  pageInfo: {
+    totalResults: 1,
+    resultsPerPage: 5,
+  },
+  items: [
+    {
+      kind: "youtube#channel",
+      etag: "7VXozDeztPxlh-aW2fYVN7bcPxQ",
+      id: "UCf9T51_FmMlfhiGpoes0yFA",
+      statistics: {
+        viewCount: "39669",
+        subscriberCount: "1010",
+        hiddenSubscriberCount: false,
+        videoCount: "114",
+      },
+    },
+  ],
+};
+
+const VideoCard = ({ video }) => {
+  const handleVideoClick = () => {
+    const videoId = video.id?.videoId;
+    const playlistId = video.id?.playlistId;
+    
+    if (videoId) {
+      window.open(`https://www.youtube.com/watch?v=${videoId}`, '_blank');
+    } else if (playlistId) {
+      window.open(`https://www.youtube.com/playlist?list=${playlistId}`, '_blank');
+    }
+  };
+
+  const getThumbnailUrl = () => {
+    // Use medium quality thumbnail for better display
+    return video.snippet.thumbnails?.medium?.url || 
+           video.snippet.thumbnails?.high?.url || 
+           video.snippet.thumbnails?.default?.url;
+  };
+
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
+
+  return (
+    <div 
+      className="bg-gray-900 rounded-lg overflow-hidden cursor-pointer hover:bg-gray-800 transition-colors duration-200 group"
+      onClick={handleVideoClick}
+    >
+      <div className="relative">
+        <img
+          src={getThumbnailUrl()}
+          alt={video.snippet.title}
+          className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-200"
+          onError={(e) => {
+            e.target.src = "/api/placeholder/320/180";
+          }}
+        />
+        <div className="absolute bottom-2 right-2 bg-black bg-opacity-80 text-white text-xs px-2 py-1 rounded">
+          {video.id?.kind === "youtube#video" ? "VIDEO" : "PLAYLIST"}
+        </div>
+      </div>
+      <div className="p-4">
+        <h3 className="text-white font-semibold text-sm mb-2 line-clamp-2 leading-tight">
+          {video.snippet.title}
+        </h3>
+        <p className="text-gray-400 text-xs mb-2 line-clamp-2">
+          {video.snippet.description}
+        </p>
+        <div className="flex justify-between items-center text-xs text-gray-500">
+          <span>{video.snippet.channelTitle}</span>
+          <span>{formatDate(video.snippet.publishedAt)}</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const LatestYouTubeVideos = () => {
+  const channelStats = getYoutubeChannelDataDefaultResponse.items[0].statistics;
+  const videos = getYoutubeVideosDefaultResponse.items;
+
+  return (
+    <div className="bg-black text-white p-8 min-h-screen">
+      <div className="max-w-6xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold mb-4">Latest YouTube Videos</h1>
+          <div className="flex justify-center items-center gap-6 text-sm text-gray-400">
+            <div className="flex items-center gap-2">
+              <span className="text-blue-400">👥</span>
+              <span>{parseInt(channelStats.subscriberCount).toLocaleString()} subscribers</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-blue-400">📹</span>
+              <span>{channelStats.videoCount} videos</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {videos.map((video, index) => (
+            <VideoCard key={video.etag || index} video={video} />
+          ))}
+        </div>
+
+        <div className="text-center mt-8">
+          <button className="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-lg font-semibold transition-colors duration-200">
+            View More Videos
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default LatestYouTubeVideos;
